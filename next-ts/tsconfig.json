@@ -64,6 +64,7 @@
       "esnext",
       "ES2020"
     ],
+    "strictNullChecks": true,
     "allowJs": true,
     "noEmit": true,
     "moduleResolution": "node",

@@ -1,5 +1,5 @@
-import React, { FunctionComponent } from 'react';
-import Head from 'next/head';
+import React, { FunctionComponent } from "react";
+import Head from "next/head";
 
 type LayoutProp = {
   title?: string;
