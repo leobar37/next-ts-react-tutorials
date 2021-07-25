@@ -43,6 +43,7 @@ function countReducer(state: State, action: CounActions) {
     }
   }
 }
+
 const CountContext = React.createContext<{
   state: State;
   dispatch: Dispatch<CounActions>;
