@@ -75,8 +75,6 @@ function NonFormik() {
               <FormLabel>Username:</FormLabel>
               <Field name="username">
                 {({ form, field, meta }: FieldProps) => {
-                  console.log(meta.error);
-
                   return <Input {...field}></Input>;
                 }}
               </Field>
