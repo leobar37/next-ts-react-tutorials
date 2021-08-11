@@ -10,6 +10,9 @@ import {
   Button,
   useToast,
   FormErrorMessage,
+  Textarea,
+  HStack,
+  Fade,
 } from "@chakra-ui/react";
 import {
   Formik,
@@ -21,11 +24,23 @@ import {
   ErrorMessage,
   FormikErrors,
   useField,
+  FieldArrayRenderProps,
+  FieldArray,
+  useFormikContext,
+  getIn,
 } from "formik";
-
+import { AnimatePresence } from "framer-motion";
 import * as yup from "yup";
 import { SchemaOf, Asserts, TypeOf } from "yup";
-import { InputControl, SubmitButton } from "formik-chakra-ui";
+
+import { SubmitButton } from "formik-chakra-ui";
+
+// import chakra from "chakra";
+
+/*
+ TODO: separe array field in a component
+*/
+
 const userSchema = yup.object({
   name: yup
     .string()
@@ -33,6 +48,17 @@ const userSchema = yup.object({
     .required(),
   lastName: yup.string().defined().required(),
   username: yup.string().required("The username is required"),
+  // yup support nested validations
+  skills: yup
+    .array()
+    .of(
+      yup.object().shape({
+        name: yup.string().required(),
+        description: yup.string().required("La descripción es requerida"),
+      })
+    )
+    .min(1, "You need have skills 🙄")
+    .required(),
 });
 
 interface UserRegisterForm extends Asserts<typeof userSchema> {}
@@ -63,6 +89,79 @@ const MyCustomField = <Val extends undefined>({
   );
 };
 
+type SkillsFormProps = { name: string };
+const SkillsForm = ({ name }: SkillsFormProps) => {
+  const { values } = useFormikContext<UserRegisterForm>();
+
+  return (
+    <FieldArray
+      name={name}
+      render={({ remove, push, form }: FieldArrayRenderProps) => {
+        return (
+          <React.Fragment>
+            <HStack spacing={10}>
+              <Text fontWeight="bold">Typed your skills</Text>
+              <Button
+                variant="solid"
+                onClick={() => push({ name: "", description: "" })}
+              >
+                add
+              </Button>
+            </HStack>
+            <Box
+              overflowY={"scroll"}
+              my={2}
+              p={2}
+              maxHeight="350px"
+              borderRadius="10px"
+            >
+              <AnimatePresence>
+                {getIn(values, name) &&
+                  (getIn(values, name) as any[]).map((item, idx) => (
+                    <Box key={idx} shadow="xl" p={2} bg="white">
+                      <Text fontWeight="semibold">Skill {idx + 1}:</Text>
+                      <HStack>
+                        <Box minWidth="350px">
+                          <MyCustomField
+                            value={item.name}
+                            name={`${name}.${idx}.name`}
+                            label="Nombre"
+                          />
+                          <Field name={`${name}.${idx}.description`}>
+                            {({
+                              form,
+                              meta,
+                              field,
+                            }: FieldProps<string, UserRegisterForm>) => (
+                              <FormControl
+                                isInvalid={!!(meta.touched && meta.error)}
+                              >
+                                <FormLabel>Description</FormLabel>
+                                <Textarea {...field} />
+                                <FormErrorMessage>
+                                  {meta.error}
+                                </FormErrorMessage>
+                              </FormControl>
+                            )}
+                          </Field>
+                        </Box>
+                        <Box>
+                          <Button colorScheme="red" onClick={() => remove(idx)}>
+                            x
+                          </Button>
+                        </Box>
+                      </HStack>
+                    </Box>
+                  ))}
+              </AnimatePresence>
+            </Box>
+          </React.Fragment>
+        );
+      }}
+    />
+  );
+};
+
 function NonFormik() {
   const toast = useToast();
 
@@ -81,6 +180,12 @@ function NonFormik() {
             username: "",
             lastName: "",
             name: "",
+            skills: [
+              {
+                name: "test",
+                description: "Hello",
+              },
+            ],
           } as UserRegisterForm
         }
         onSubmit={async (
@@ -92,7 +197,8 @@ function NonFormik() {
             setErrors,
           }: FormikHelpers<UserRegisterForm>
         ) => {
-          await sleeep(3000);
+          // await sleeep(3000);
+
           toast({
             description: "Successfull registration, welcome " + values.name,
           });
@@ -124,16 +230,12 @@ function NonFormik() {
               fontSize="2xl"
               my={2}
             >
-              Register
+              Hello developer, fill this form 🙂
             </Text>
-
-            <MyCustomField name="username" color="red" label="Usuario" />
+            <MyCustomField name="username" label="Usuario" />
             <MyCustomField name="name" label="Name" />
             <MyCustomField name="lastName" label="Last Name" />
-
-            {/* <InputControl name="username" label="Username" />
-            <InputControl name="name" label="Name" />
-            <InputControl name="lastName" label="Last Name" /> */}
+            <SkillsForm name="skills" />
             <Box my={3} display="block" textAlign="center">
               <SubmitButton disabled={isSubmitting} type="submit" mx={"auto"}>
                 Submit
