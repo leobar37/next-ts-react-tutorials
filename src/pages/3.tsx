@@ -1,96 +1,72 @@
-import React, { FormEventHandler, ChangeEventHandler, useState } from "react";
-import {
-  Box,
-  Flex,
-  FormControl,
-  FormLabel,
-  Text,
-  Input,
-  Button,
-  useToast,
-} from "@chakra-ui/react";
-import { Formik, Form, FormikProps, Field, FormikHelpers } from "formik";
-function NonFormik() {
-  const toast = useToast();
+import React, { ReactNode, ReactChild, PropsWithChildren, FC } from "react";
+import { Box, Text, VStack, HStack } from "@chakra-ui/react";
+import Layout from "../components/Layout";
+
+type ChildProps = {
+  title: ReactChild;
+  body: ReactChild;
+  footer: ReactChild;
+};
+
+type CardProps = {
+  children: ChildProps | ReactNode;
+};
+
+const isChildObject = (obj: any): obj is ChildProps => {
+  return typeof obj == "object" && typeof obj != "function" && "title" in obj;
+};
+
+export const Card = ({ children }: CardProps) => {
+  let content = null;
+
+  if (isChildObject(children)) {
+    const { title, body, footer } = children;
+    content = (
+      <React.Fragment>
+        <Text fontWeight="bold">{title}</Text>
+        <Box color="red">{body}</Box>
+        <HStack>
+          <Box>{footer}</Box>
+        </HStack>
+      </React.Fragment>
+    );
+  } else {
+    content = children;
+  }
 
   return (
-    <Flex
-      height="100vh"
-      width="100vw"
-      bg="blue.600"
-      justifyContent="center"
-      alignItems="center"
+    <VStack
+      color="black"
+      m={2}
+      height="150px"
+      width="150px"
+      bg="white"
+      shadow="xl"
     >
-      <Formik
-        initialValues={{
-          username: "",
-          lastName: "",
-          name: "",
-        }}
-        onSubmit={(values, { setSubmitting }: FormikHelpers<any>) => {
-          setSubmitting(true);
+      {content}
+    </VStack>
+  );
+};
 
-          setTimeout(() => {
-            toast({
-              description: JSON.stringify(values, null, 4),
-            });
-            setSubmitting(false);
-          }, 300);
-        }}
-      >
-        {({
-          handleChange,
-          handleSubmit,
-          values,
-          isSubmitting,
-        }: FormikProps<any>) => (
-          <Box
-            as="form"
-            shadow="lg"
-            bg="white"
-            onSubmit={handleSubmit as any}
-            width="500px"
-            borderRadius="md"
-            p={4}
-          >
-            <Text
-              textAlign="center"
-              fontWeight="semibold"
-              fontSize="2xl"
-              my={2}
-            >
-              Register
-            </Text>
-            <FormControl>
-              <FormLabel>Username:</FormLabel>
-              <Input
-                name="username"
-                value={values.username}
-                onChange={handleChange}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Name: </FormLabel>
-              <Input name="name" value={values.name} onChange={handleChange} />
-            </FormControl>
-            <FormControl>
-              <FormLabel>LastName:</FormLabel>
-              <Input
-                name="lastName"
-                value={values.lastName}
-                onChange={handleChange}
-              />
-            </FormControl>
-            <Box my={3} display="block" textAlign="center">
-              <Button disabled={isSubmitting} type="submit" mx={"auto"}>
-                Submit
-              </Button>
+function Page() {
+  return (
+    <Layout>
+      <Card>
+        {{
+          body: (
+            <Box>
+              <h1>hello body</h1>
             </Box>
-          </Box>
-        )}
-      </Formik>
-    </Flex>
+          ),
+          title: "Header",
+          footer: "footer",
+        }}
+      </Card>
+      <Card>
+        <h1>hello</h1>
+      </Card>
+    </Layout>
   );
 }
 
-export default NonFormik;
+export default Page;

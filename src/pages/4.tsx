@@ -1,106 +1,83 @@
-import React, { FormEventHandler, ChangeEventHandler, useState } from "react";
-import {
-  Box,
-  Flex,
-  FormControl,
-  FormLabel,
-  Text,
-  Input,
-  Button,
-  useToast,
-  chakra,
-} from "@chakra-ui/react";
-import {
-  Formik,
-  Form,
-  FormikProps,
-  Field,
-  FormikHelpers,
-  FieldProps,
-} from "formik";
+import React, {
+  ReactNode,
+  ReactChild,
+  PropsWithChildren,
+  FC,
+  Children,
+  useCallback,
+  useState,
+} from "react";
+import {} from "react-dom";
+import { Box, Text, Flex, VStack, HStack, Button } from "@chakra-ui/react";
+import Layout from "../components/Layout";
 
-function NonFormik() {
-  const toast = useToast();
+export interface Todo {
+  userId: number;
+  id: number;
+  title: string;
+  completed: boolean;
+}
 
+type PropsController = {
+  children: (api: {
+    todos: Todo[];
+    loading: boolean;
+    fetchTodos: () => void;
+  }) => ReactNode;
+};
+
+const TodoController = ({ children }: PropsController) => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const fetchTodos = useCallback(async () => {
+    const _todos = await fetch(
+      "https://jsonplaceholder.typicode.com/todos/"
+    ).then((response) => response.json());
+    setTodos(_todos);
+    setLoading(false);
+  }, [todos]);
+
+  const actionTodos = () => {
+    setLoading(true);
+    setTimeout(() => {
+      fetchTodos();
+    }, 3000);
+  };
+
+  return <>{children({ todos, loading, fetchTodos: actionTodos })}</>;
+};
+
+function Page() {
   return (
-    <Flex
-      height="100vh"
-      width="100vw"
-      bg="blue.600"
-      justifyContent="center"
-      alignItems="center"
-    >
-      <Formik
-        initialValues={{
-          username: "",
-          lastName: "",
-          name: "",
-        }}
-        onSubmit={async (values, { setSubmitting }: FormikHelpers<any>) => {
-          setTimeout(() => {
-            toast({
-              description: JSON.stringify(values, null, 4),
-            });
-          }, 300);
-        }}
-      >
-        {({
-          handleChange,
-          handleSubmit,
-          values,
-          handleReset,
-          handleBlur,
-          isSubmitting,
-        }: FormikProps<any>) => (
-          <Box
-            as="form"
-            shadow="lg"
-            bg="white"
-            width="500px"
-            borderRadius="md"
-            onSubmit={handleSubmit as any}
-            onReset={handleReset}
-            onBlur={handleBlur}
-            p={4}
-          >
-            <Text
-              textAlign="center"
-              fontWeight="semibold"
-              fontSize="2xl"
-              my={2}
+    <Layout>
+      <TodoController>
+        {({ todos, fetchTodos, loading }) => (
+          <>
+            <Flex
+              justifyContent="center"
+              bg="white"
+              width="500px"
+              direction="column"
             >
-              Register
-            </Text>
-            <FormControl>
-              <FormLabel>Username:</FormLabel>
-              <Field name="username">
-                {({ form, field, meta }: FieldProps) => {
-                  return <Input {...field}></Input>;
-                }}
-              </Field>
-            </FormControl>
-            <FormControl>
-              <FormLabel>Name: </FormLabel>
-              <Input name="name" value={values.name} onChange={handleChange} />
-            </FormControl>
-            <FormControl>
-              <FormLabel>LastName:</FormLabel>
-              <Input
-                name="lastName"
-                value={values.lastName}
-                onChange={handleChange}
-              />
-            </FormControl>
-            <Box my={3} display="block" textAlign="center">
-              <Button disabled={isSubmitting} type="submit" mx={"auto"}>
-                Submit
-              </Button>
-            </Box>
-          </Box>
+              {loading && (
+                <Box>
+                  <h1>cargando...</h1>
+                </Box>
+              )}
+              {!loading && (
+                <Box maxHeight="350px" overflowY="scroll">
+                  {todos.map((todo) => (
+                    <Box key={todo.id}>{todo.title}</Box>
+                  ))}
+                </Box>
+              )}
+              <Button onClick={() => fetchTodos()}>fetch</Button>
+            </Flex>
+          </>
         )}
-      </Formik>
-    </Flex>
+      </TodoController>
+    </Layout>
   );
 }
 
-export default NonFormik;
+export default Page;
